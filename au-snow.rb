@@ -68,7 +68,7 @@ def get(date, satellite, quality)
       %x[convert -quiet "#{tif}" -quality #{quality}% "#{jpg}"]
       flickr.upload_photo(jpg, :title => title).tap do |id|
         flickr.photos.setDates(:photo_id => id, :date_taken => time.strftime("%F %T"))
-        flickr.photos.setTags(:photo_id => id, :tags => "au-snow:year=#{date.year} au-snow:state=#{state} au-snow:satellite=#{satellite} au-snow:yday=#{date.yday}")
+        flickr.photos.setTags(:photo_id => id, :tags => "au_snow:year=#{date.year} au_snow:state=#{state} au_snow:satellite=#{satellite} au_snow:yday=#{date.yday}")
         flickr.photos.setPerms(:photo_id => id, :is_public => 1, :is_friend => 0, :is_family => 1, :perm_comment => 0, :perm_addmeta => 0)
         flickr.photosets.getList.find do |set|
           set.title == set_title
