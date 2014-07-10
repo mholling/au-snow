@@ -6,6 +6,7 @@ date = Date.today
 satellite = "terra"
 FlickRaw.api_key = "cef9b7cd3df5f75351acd80f60ff5b47"
 days = nil
+quality = 60
 
 OptionParser.new("usage: au-snow.rb [options]") do |options|
   options.on "--date DATE", "date of satellite imagery" do |value|
@@ -33,11 +34,14 @@ OptionParser.new("usage: au-snow.rb [options]") do |options|
   options.on "--days DAYS", "consecutive days to download" do |value|
     days = value.to_i
   end
+  options.on "--quality QUALITY", "JPEG quality percentage" do |value|
+    quality = value.to_i
+  end
 end.parse!
 
 UnavailableError = Class.new(StandardError);
 
-def get(date, satellite)
+def get(date, satellite, quality)
   Dir.mktmpdir do |dir|
     dir = Pathname.new(dir)
     specifiers = "%d%03d.%s.250m" % [ date.year, date.yday, satellite ]
@@ -61,7 +65,7 @@ def get(date, satellite)
       tif = dir + "#{title}.tif"
       jpg = dir + "#{title}.jpg"
       %x[gdal_translate -projwin #{window} "#{img}" "#{tif}"]
-      %x[convert -quiet "#{tif}" "#{jpg}"]
+      %x[convert -quiet "#{tif}" -quality #{quality}% "#{jpg}"]
       flickr.upload_photo(jpg, :title => title).tap do |id|
         flickr.photos.setDates(:photo_id => id, :date_taken => time.strftime("%F %T"))
         flickr.photos.setTags(:photo_id => id, :tags => "au-snow:year=#{date.year} au-snow:state=#{state} au-snow:satellite=#{satellite} au-snow:yday=#{date.yday}")
@@ -81,7 +85,7 @@ end
 end.each do |date|
   %w[terra aqua].each do |satellite|
     begin
-      get(date, satellite)
+      get(date, satellite, quality)
       STDOUT.puts"#{date} #{satellite}: downloaded"
     rescue UnavailableError => e
       STDERR.puts e.message;
@@ -89,4 +93,4 @@ end.each do |date|
   end
 end if days
 
-get(date, satellite) if !days
+get(date, satellite, quality) if !days
