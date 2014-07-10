@@ -4,6 +4,7 @@
 
 date = Date.today
 satellite = "terra"
+FlickRaw.api_key = "cef9b7cd3df5f75351acd80f60ff5b47"
 
 OptionParser.new("usage: au-snow.rb [options]") do |options|
   options.on "--date DATE", "date of satellite imagery" do |value|
@@ -34,10 +35,10 @@ end.parse!
 
 Dir.mktmpdir do |dir|
   dir = Pathname.new(dir)
-  subset = "Australia6.%d%03d.%s.250m" % [ date.year, date.yday, satellite ]
+  specifiers = "%d%03d.%s.250m" % [ date.year, date.yday, satellite ]
   img, jgw, txt = [ %w[jpg jgw txt], %w[wb w w] ].transpose.map do |ext, flags|
-    path = dir + "#{subset}.#{ext}"
-    uri = URI.parse("http://lance-modis.eosdis.nasa.gov/imagery/subsets/?subset=#{subset}.#{ext}")
+    path = dir + "#{specifiers}.#{ext}"
+    uri = URI.parse("http://lance-modis.eosdis.nasa.gov/imagery/subsets/?project=fas&subset=FAS_SEAustralia3.#{specifiers}.#{ext}")
     path.open(flags) { |file| file << uri.read }
     path
   end
@@ -46,8 +47,8 @@ Dir.mktmpdir do |dir|
   end.last.getlocal("+10:00")
 
   [
-    [ "NSW", "147.768908 -35.414950 149.112564 -36.929548" ],
-    [ "VIC", "146.141080 -36.632428 147.541791 -37.918267" ],
+    [ "nsw", "147.768908 -35.414950 149.112564 -36.929548" ],
+    [ "vic", "146.141080 -36.632428 147.541791 -37.918267" ],
   ].each do |state, window|
     title = "#{state}-#{date}-#{satellite}"
     set_title = "au-snow-#{state}"
@@ -57,8 +58,8 @@ Dir.mktmpdir do |dir|
     %x[convert -quiet "#{tif}" "#{jpg}"]
     flickr.upload_photo(jpg, :title => title).tap do |id|
       flickr.photos.setDates(:photo_id => id, :date_taken => time.strftime("%F %T"))
-      flickr.photos.setTags(:photo_id => id, :tags => "ausnow:year=#{date.year} ausnow:state=#{state} ausnow:satellite=#{satellite}")
-      flickr.photos.setPerms(:photo_id => id, :is_public => 1, :perm_comment => 0, :perm_addmeta => 0)
+      flickr.photos.setTags(:photo_id => id, :tags => "au-snow:year=#{date.year} au-snow:state=#{state} au-snow:satellite=#{satellite}")
+      flickr.photos.setPerms(:photo_id => id, :is_public => 1, :is_friend => 0, :is_family => 1, :perm_comment => 0, :perm_addmeta => 0)
       flickr.photosets.getList.find do |set|
         set.title == set_title
       end.tap do |set|
