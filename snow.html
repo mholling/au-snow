@@ -1,0 +1,74 @@
+<section stop-screen-move>
+  <div class="btn-toolbar">
+    <ul id="states" class="btn-group btn-group-sm">
+      <li class="btn btn-default" ng-repeat="state in snow.states" ng-class="{ active: state == snow.state }" ng-click="snow.setState(state)">
+        {{ state | uppercase }}
+      </li>
+    </ul>
+    <div id="years" class="dropdown btn-group btn-group-sm">
+      <button class="btn btn-default" type="button">
+        {{ snow.year }}
+      </button>
+      <button class="btn btn-default dropdown-toggle" type="button">
+        <span class="caret"></span>
+      </button>
+      <ul class="dropdown-menu">
+        <!-- TODO: disable years with no images? -->
+        <li ng-repeat="year in snow.years" ng-class="{ active: year == snow.year }">
+          <a tabindex="-1" href dropdown-toggle ng-click="snow.setYear(year)">
+            {{ year }}
+          </a>
+        </li>
+      </ul>
+    </div>
+    <ul id="overlays" class="btn-group btn-group-sm" ng-if="snow.overlays.length > 0">
+      <li class="btn btn-default" ng-repeat="overlay in snow.overlays" ng-class="{ active: overlay.active }" ng-click="overlay.active = !overlay.active">
+        {{ overlay.name }}
+      </li>
+    </ul>
+    <div id="greatest-hits" class="dropdown btn-group btn-group-sm" ng-if="snow.greatestHits.length > 0">
+      <button class="btn btn-default" type="button">
+        Greatest Hits
+      </button>
+      <button class="btn btn-default dropdown-toggle" type="button">
+        <span class="caret"></span>
+      </button>
+      <ul class="dropdown-menu">
+        <li ng-repeat="hit in snow.greatestHits">
+          <a tabindex="-1" href dropdown-toggle ng-click="snow.goTo(hit.state, hit.date, hit.satellite)">
+            {{ hit.date | date:'yyyy/MM/dd'}}: {{ hit.comment }}
+          </a>
+        </li>
+      </ul>
+    </div>
+  </div>
+  <div ng-if="snow.photo">
+    <div id="photo" ng-class="snow.state" ng-style="{ 'background-image': 'url(' + snow.photo.url + ')' }" ng-swipe-left="snow.next()" ng-swipe-right="snow.prev()">
+      <div class="overlay" ng-repeat="overlay in snow.overlays" ng-style="{ 'background-image': 'url(' + overlay.url + ')' }" ng-show="overlay.active">
+      </div>
+      <div id="permalink">
+        <a class="badge pull-right" ng-href="{{ snow.photo.permalink }}">
+          <span class="glyphicon glyphicon-link"></span>
+        </a>
+      </div>
+      <div id="info">
+        <span class="badge pull-left">
+          {{ snow.photo.date | date:'MMMM d' }}<sup>{{ snow.photo.date | date:'d' | ordinalIndicator }}</sup>
+        </span>
+        <span class="badge pull-right">
+          {{ snow.photo.satellite == 'terra' ? 'AM' : 'PM' }}
+        </span>
+      </div>
+    </div>
+    <ul id="photos" class="pagination" ng-class="'count-' + snow.countBy(25)">
+      <li ng-click="snow.prev()" ng-class="{ disabled: snow.isFirst() }" class="arrow"><a></a></li>
+      <li ng-repeat="photo in snow.photos" ng-class="{ active: photo == snow.photo }" ng-mouseenter="snow.photo = photo" ng-click="snow.photo = photo"><a></a></li>
+      <li ng-click="snow.next()" ng-class="{ disabled: snow.isLast() }" class="arrow"><a></a></li>
+    </ul>
+  </div>
+  <footer>
+    Imagery by <a href="http://lance-modis.eosdis.nasa.gov/imagery/subsets/?area=global">MODIS</a>,
+    hosting by <a href="https://www.flickr.com">Flickr</a> &amp; <a href="https://github.com">GitHub</a>,
+    code by <a href="https://github.com/mholling/au-snow/tree/gh-pages">Matthew Hollingworth</a>.
+  </footer>
+</section>
