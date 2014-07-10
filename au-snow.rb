@@ -42,6 +42,7 @@ Dir.mktmpdir do |dir|
     path.open(flags) { |file| file << uri.read }
     path
   end
+  abort("data not available for that date") if txt.read[/error/i]
   time = txt.read.each_line.grep(/^(\d\d):(\d\d) UTC/) do
     Time.utc(date.year, date.month, date.day, $1.to_i, $2.to_i)
   end.last.getlocal("+10:00")
