@@ -27,14 +27,6 @@ body > section > footer {
   margin-top: 5px;
   position: relative;
 }
-#photo.nsw {
-  width: 542px;
-  height: 674px;
-}
-#photo.vic {
-  width: 565px;
-  height: 572px;
-}
 #photo .overlay {
   position: absolute;
   width: 100%;

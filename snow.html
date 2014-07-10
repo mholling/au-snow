@@ -43,8 +43,8 @@
     </div>
   </div>
   <div ng-if="snow.photo">
-    <div id="photo" ng-class="snow.state" ng-style="{ 'background-image': 'url(' + snow.photo.url + ')' }" ng-swipe-left="snow.next()" ng-swipe-right="snow.prev()">
-      <div class="overlay" ng-repeat="overlay in snow.overlays" ng-style="{ 'background-image': 'url(' + overlay.url + ')' }" ng-show="overlay.active">
+    <div id="photo" ng-style="{ 'background-image': 'url('+snow.photo.url+')', width: snow.photo.width+'px', height: snow.photo.height+'px' }" ng-swipe-left="snow.next()" ng-swipe-right="snow.prev()">
+      <div class="overlay" ng-repeat="overlay in snow.overlays" ng-style="{ 'background-image': 'url('+overlay.url+')' }" ng-show="overlay.active">
       </div>
       <div id="permalink">
         <a class="badge pull-right" ng-href="{{ snow.photo.permalink }}">

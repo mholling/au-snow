@@ -82,6 +82,8 @@
               date: new Date(parts[0], parts[1]-1, parts[2]),
               satellite: satellite,
               permalink: [ '#', state, parts[0], parts[1], parts[2], satellite ].join('/'),
+              width: photo.width_o,
+              height: photo.height_o,
             };
           });
           self.cache[state][year].photo = self.cache[state][year].photos[0];
