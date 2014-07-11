@@ -58,7 +58,7 @@ def get(date, satellite, quality)
       path.open(flags) { |file| file << uri.read }
       path
     end
-    raise UnavailableError.new("#{date} #{satellite}: data not available") if txt.read[/error/i]
+    raise UnavailableError.new("data not available") if txt.read[/error/i]
     time = txt.read.each_line.grep(/^(\d\d):(\d\d) UTC/) do
       Time.utc(date.year, date.month, date.day, $1.to_i, $2.to_i)
     end.last.getlocal("+10:00")
@@ -92,12 +92,12 @@ Range.new(date["start"], date["stop"]).each do |date|
     begin
       get(date, satellite, quality)
       STDOUT.puts "#{date} #{satellite}: downloaded"
-    rescue FlickRaw::Error, JSON::ParserError => e
+    rescue UnavailableError => e
+      STDERR.puts "#{date} #{satellite}: #{e.message}"
+    rescue StandardError => e
       STDERR.puts "#{date} #{satellite}: #{e.message}"
       STDERR.puts "retrying..."
       retry
-    rescue UnavailableError => e
-      STDERR.puts e.message;
     end
   end
 end if Hash === date
