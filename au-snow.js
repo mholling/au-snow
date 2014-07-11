@@ -1,19 +1,9 @@
 (function () {
   'use strict';
 
-  angular.module('auSnow', [ 'ui.bootstrap', 'ngRoute', 'ngTouch' ])
+  angular.module('auSnow', [ 'ui.bootstrap', 'ngTouch' ])
 
-  .config([ '$routeProvider', '$locationProvider', function($routeProvider, $locationProvider) {
-    $routeProvider.when('/', {
-      controller: 'SnowController',
-      controllerAs: 'snow',
-      templateUrl: 'snow.html',
-    }).when('/:state/:year/:month/:day/:satellite', {
-      redirectTo: '/',
-      // TODO: fix this routing so params disappear from search bar!
-    }).otherwise({
-      redirectTo: '/',
-    });
+  .config([ '$locationProvider', function($locationProvider) {
     $locationProvider.html5Mode(true);
   } ])
 
@@ -39,18 +29,18 @@
     };
   } ])
 
-  .controller('SnowController', [ 'flickrSearch', '$routeParams', '$q', function(flickrSearch, $routeParams, $q) {
+  .controller('SnowController', [ 'flickrSearch', '$location', '$q', function(flickrSearch, $location, $q) {
     var self = this;
 
     this.states = [ 'nsw', 'vic' ]; // TODO: add Tasmania!
-    
+
     this.years = [ ];
     var today = new Date();
     var lastYear = today.getFullYear() - (today.getMonth() < 4 ? 1  : 0 );
     for (var year = 2004; year <= lastYear; ++year) {
       this.years.push(String(year));
     }
-    
+
     this.overlays = [ ];
 
     this.cache = { };
@@ -67,7 +57,7 @@
       { state: 'vic', date: new Date(2014, 6,  2), satellite: 'terra', comment: "(VIC, July 2, AM) Banding" },
       { state: 'vic', date: new Date(2010, 7,  9), satellite: 'aqua',  comment: "(VIC, August 9, PM) Clear day" },
     ];
-    
+
     this.loadCache = function(state, year) {
       var loadPhotos = function() {
         if (self.cache[state][year].photos)
@@ -75,13 +65,13 @@
         return flickrSearch({ state: state, year: year}).success(function(data) {
           self.cache[state][year].photos = data.photos.photo.map(function(photo) {
             var parts = photo.datetaken.split(/[- :]/);
-            var match = photo.machine_tags.match(/au_snow:satellite=(terra|aqua)/);
+            var match = photo.machine_tags.match(/au_?snow:satellite=(terra|aqua)/);
             var satellite = match && match[1];
             return {
               url: photo.url_o,
               date: new Date(parts[0], parts[1]-1, parts[2]),
               satellite: satellite,
-              permalink: [ '#', state, parts[0], parts[1], parts[2], satellite ].join('/'),
+              permalink: '?state=' + state + '&year=' + parts[0] + '&month=' + parts[1] + '&day=' + parts[2] + '&satellite=' + satellite,
               width: photo.width_o,
               height: photo.height_o,
             };
@@ -94,7 +84,7 @@
           return $q.when();
         return flickrSearch({ state: state, overlay: null }).success(function(data) {
           self.cache[state].overlays = data.photos.photo.map(function(photo) {
-            var match = photo.machine_tags.match(/au_snow:overlay=([^\s]+)/);
+            var match = photo.machine_tags.match(/au_?snow:overlay=([^\s]+)/);
             return {
               url: photo.url_o,
               name: match && match[1],
@@ -105,7 +95,7 @@
       };
       return loadPhotos().then(loadOverlays);
     };
-    
+
     this.updateStateAndYear = function(state, year) {
       if (this.state && this.year)
         this.cache[this.state][this.year].photo = this.photo;
@@ -124,7 +114,7 @@
         if (satellite == this.photo.satellite) { break; }
       }
     };
-    
+
     this.setYear = function(year) {
       this.loadCache(this.state, year).then(function() {
         self.updateStateAndYear(self.state, year);
@@ -153,10 +143,10 @@
     this.isLast = function() {
       return this.photos.indexOf(this.photo) == this.photos.length - 1;
     };
-    
+
     this.goTo = function(state, date, satellite) {
       var year = date.getFullYear();
-      this.loadCache(state, year).then(function() {
+      return this.loadCache(state, year).then(function() {
         self.updateStateAndYear(state, year);
         self.updatePhoto(date, satellite);
       });
@@ -166,14 +156,13 @@
       return n * Math.ceil(this.photos.length / n);
     };
 
-    var state = this.states.indexOf($routeParams.state) < 0 ? this.states[0] : $routeParams.state;
-    var year = this.years.indexOf($routeParams.year) < 0 ? this.years[this.years.length - 1] : $routeParams.year
-    
-    this.loadCache(state, year).then(function() {
-      var date = new Date(year, ($routeParams.month || 1) - 1, $routeParams.day || 1);
-      var satellite = $routeParams.satellite;
-      self.updateStateAndYear(state, year);
-      self.updatePhoto(date, satellite);
+    var state = this.states.indexOf($location.search().state) < 0 ? this.states[0] : $location.search().state;
+    var year = this.years.indexOf($location.search().year) < 0 ? this.years[this.years.length - 1] : $location.search().year
+    var date = new Date(year, ($location.search().month || 1) - 1, $location.search().day || 1);
+    var satellite = $location.search().satellite || "terra";
+
+    this.goTo(state, date, satellite).then(function() {
+      $location.search('').replace();
     });
   } ])
 
