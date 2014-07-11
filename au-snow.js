@@ -29,28 +29,58 @@
     };
   } ])
 
-  .controller('SnowController', [ 'flickrSearch', '$location', '$q', function(flickrSearch, $location, $q) {
+  .factory('flickrTagValues', [ '$http', function($http) {
+    return function(predicate) {
+      return $http.get('https://api.flickr.com/services/rest/', {
+        params: {
+          method: 'flickr.machinetags.getValues',
+          api_key: 'cef9b7cd3df5f75351acd80f60ff5b47',
+          namespace: 'ausnow',
+          predicate: predicate,
+          format: 'json',
+          nojsoncallback: 1,
+        },
+      });
+    };
+  } ])
+
+  .controller('SnowController', [ 'flickrSearch', 'flickrTagValues', '$location', '$q', function(flickrSearch, flickrTagValues, $location, $q) {
     var self = this;
 
     this.states = [ 'nsw', 'vic' ]; // TODO: add Tasmania!
 
-    this.years = [ ];
-    var today = new Date();
-    var lastYear = today.getFullYear() - (today.getMonth() < 4 ? 1  : 0 );
-    for (var year = 2004; year <= lastYear; ++year) {
-      this.years.push(String(year));
-    }
-
-    this.overlays = [ ];
-    this.greatestHits = [ ];
-
-    this.cache = { };
-    this.states.forEach(function(state) {
-      self.cache[state] = { };
-      self.years.forEach(function(year) {
-        self.cache[state][year] = { };
+    this.loadYears = function() {
+      return flickrTagValues('year').success(function(data) {
+        self.years = data.values.value.map(function(value) {
+          return value._content;
+        }).filter(function(year) {
+          return year.match(/^2\d\d\d$/) && year >= 2004 && year <= new Date().getFullYear();
+        });
+        self.cache = { };
+        self.states.forEach(function(state) {
+          self.cache[state] = { };
+          self.years.forEach(function(year) {
+            self.cache[state][year] = { };
+          });
+        });
       });
-    });
+    };
+
+    this.loadGreatestHits = function() {
+      return flickrSearch({ hit: null, state: null }).success(function(data) {
+        self.greatestHits = data.photos.photo.map(function(photo) {
+          var parts = photo.datetaken.split(/[- :]/);
+          var satellite_match = photo.machine_tags.match(/ausnow:satellite=(terra|aqua)/);
+          var state_match = photo.machine_tags.match(/ausnow:state=(nsw|vic)/);
+          return {
+            date: new Date(parts[0], parts[1]-1, parts[2]),
+            state: state_match && state_match[1],
+            satellite: satellite_match && satellite_match[1],
+            comment: photo.description._content,
+          };
+        });
+      });
+    };
 
     this.loadCache = function(state, year) {
       var loadPhotos = function() {
@@ -94,22 +124,6 @@
       };
 
       return loadPhotos().then(loadOverlays);
-    };
-
-    this.loadGreatestHits = function() {
-      return flickrSearch({ hit: null, state: null }).success(function(data) {
-        self.greatestHits = data.photos.photo.map(function(photo) {
-          var parts = photo.datetaken.split(/[- :]/);
-          var satellite_match = photo.machine_tags.match(/ausnow:satellite=(terra|aqua)/);
-          var state_match = photo.machine_tags.match(/ausnow:state=(nsw|vic)/);
-          return {
-            date: new Date(parts[0], parts[1]-1, parts[2]),
-            state: state_match && state_match[1],
-            satellite: satellite_match && satellite_match[1],
-            comment: photo.description._content,
-          };
-        });
-      });
     };
 
     this.updateStateAndYear = function(state, year) {
@@ -172,19 +186,19 @@
       return n * Math.ceil(this.photos.length / n);
     };
 
-    var start = {
-      state: this.states.indexOf($location.search().state) < 0 ? this.states[0] : $location.search().state,
-      satellite: $location.search().satellite,
-      date: new Date(
-        this.years.indexOf($location.search().year) < 0 ? this.years[this.years.length - 1] : $location.search().year,
-        ($location.search().month || 1) - 1,
-        $location.search().day || 1
-      ),
-    };
-
-    this.goTo(start).then(function() {
+    this.loadYears().then(this.loadGreatestHits).then(function() {
+      return self.goTo({
+        state: self.states.indexOf($location.search().state) < 0 ? self.states[0] : $location.search().state,
+        satellite: $location.search().satellite,
+        date: new Date(
+          self.years.indexOf($location.search().year) < 0 ? self.years[self.years.length - 1] : $location.search().year,
+          ($location.search().month || 12) - 1,
+          $location.search().day || 1
+        ),
+      });
+    }).then(function() {
       $location.search('').replace();
-    }).then(this.loadGreatestHits);
+    });
   } ])
 
   .filter('ordinalIndicator', function() {
