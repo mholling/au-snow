@@ -76,7 +76,7 @@
             date: new Date(parts[0], parts[1]-1, parts[2]),
             state: state_match && state_match[1],
             satellite: satellite_match && satellite_match[1],
-            comment: photo.description._content,
+            description: photo.description._content,
           };
         });
       });
