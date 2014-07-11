@@ -157,15 +157,6 @@
     };
 
     this.goTo = function(params) {
-      params = params || {
-        state: this.states.indexOf($location.search().state) < 0 ? this.states[0] : $location.search().state,
-        satellite: $location.search().satellite,
-        date: new Date(
-          this.years.indexOf($location.search().year) < 0 ? this.years[this.years.length - 1] : $location.search().year,
-          ($location.search().month || 1) - 1,
-          $location.search().day || 1
-        ),
-      };
       var year = params.date.getFullYear();
       return this.loadCache(params.state, year).then(function() {
         self.updateStateAndYear(params.state, year);
@@ -177,7 +168,17 @@
       return n * Math.ceil(this.photos.length / n);
     };
 
-    this.goTo().then(function() {
+    var start = {
+      state: this.states.indexOf($location.search().state) < 0 ? this.states[0] : $location.search().state,
+      satellite: $location.search().satellite,
+      date: new Date(
+        this.years.indexOf($location.search().year) < 0 ? this.years[this.years.length - 1] : $location.search().year,
+        ($location.search().month || 1) - 1,
+        $location.search().day || 1
+      ),
+    };
+
+    this.goTo(start).then(function() {
       $location.search('').replace();
     }).then(this.loadGreatestHits);
   } ])
