@@ -26,6 +26,13 @@ body > section > footer {
   margin-bottom: 0;
   margin-top: 5px;
 }
+#years .dropdown-menu {
+  min-width: 70px;
+}
+#greatest-hits .dropdown-menu {
+  left: auto;
+  right: -20%;
+}
 #photo {
   margin: 5px auto 0;
   position: relative;
