@@ -50,7 +50,7 @@
           </button>
           <ul class="dropdown-menu">
             <li ng-repeat="hit in snow.greatestHits">
-              <a tabindex="-1" href dropdown-toggle ng-click="snow.goTo(hit.state, hit.date, hit.satellite)">
+              <a tabindex="-1" href dropdown-toggle ng-click="snow.goTo(hit)">
                 {{ hit.date | date:'yyyy/MM/dd'}}: {{ hit.comment }}
               </a>
             </li>

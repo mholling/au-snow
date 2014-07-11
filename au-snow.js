@@ -157,11 +157,20 @@
       return this.photos.indexOf(this.photo) == this.photos.length - 1;
     };
 
-    this.goTo = function(state, date, satellite) {
-      var year = date.getFullYear();
-      return this.loadCache(state, year).then(function() {
-        self.updateStateAndYear(state, year);
-        self.updatePhoto(date, satellite);
+    this.goTo = function(params) {
+      params = params || {
+        state: this.states.indexOf($location.search().state) < 0 ? this.states[0] : $location.search().state,
+        satellite: $location.search().satellite,
+        date: new Date(
+          this.years.indexOf($location.search().year) < 0 ? this.years[this.years.length - 1] : $location.search().year,
+          ($location.search().month || 1) - 1,
+          $location.search().day || 1
+        ),
+      };
+      var year = params.date.getFullYear();
+      return this.loadCache(params.state, year).then(function() {
+        self.updateStateAndYear(params.state, year);
+        self.updatePhoto(params.date, params.satellite);
       });
     };
 
@@ -169,12 +178,7 @@
       return n * Math.ceil(this.photos.length / n);
     };
 
-    var state = this.states.indexOf($location.search().state) < 0 ? this.states[0] : $location.search().state;
-    var year = this.years.indexOf($location.search().year) < 0 ? this.years[this.years.length - 1] : $location.search().year
-    var date = new Date(year, ($location.search().month || 1) - 1, $location.search().day || 1);
-    var satellite = $location.search().satellite || "terra";
-
-    this.goTo(state, date, satellite).then(function() {
+    this.goTo().then(function() {
       $location.search('').replace();
     }).then(this.loadGreatestHits);
   } ])
