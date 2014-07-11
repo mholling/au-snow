@@ -10,7 +10,7 @@
   .factory('flickrSearch', [ '$http', function($http) {
     return function(query) {
       var machine_tags = Object.keys(query).map(function(key) {
-        return 'au_snow:' + key + '=' + (query[key] || '');
+        return 'ausnow:' + key + '=' + (query[key] || '');
       }).join(',');
       return $http.get('https://api.flickr.com/services/rest/', {
         params: {
@@ -65,7 +65,7 @@
         return flickrSearch({ state: state, year: year}).success(function(data) {
           self.cache[state][year].photos = data.photos.photo.map(function(photo) {
             var parts = photo.datetaken.split(/[- :]/);
-            var match = photo.machine_tags.match(/au_?snow:satellite=(terra|aqua)/);
+            var match = photo.machine_tags.match(/ausnow:satellite=(terra|aqua)/);
             var satellite = match && match[1];
             return {
               url: photo.url_o,
@@ -84,7 +84,7 @@
           return $q.when();
         return flickrSearch({ state: state, overlay: null }).success(function(data) {
           self.cache[state].overlays = data.photos.photo.map(function(photo) {
-            var match = photo.machine_tags.match(/au_?snow:overlay=([^\s]+)/);
+            var match = photo.machine_tags.match(/ausnow:overlay=([^\s]+)/);
             return {
               url: photo.url_o,
               name: match && match[1],
