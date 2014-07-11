@@ -31,8 +31,15 @@ OptionParser.new("usage: au-snow.rb [options]") do |options|
   options.on "--access-secret SECRET", "flickr access secret" do |value|
     flickr.access_secret = value
   end
-  options.on "--days DAYS", "consecutive days to download" do |value|
-    days = value.to_i
+  %w[start stop].each do |name|
+    options.on "--#{name} #{name.upcase}", "#{name} date for batch download" do |value|
+      date = {} unless Hash === date
+      date[name] = begin
+        Date.parse value
+      rescue ArgumentError
+        options.abort "bad #{name} date"
+      end
+    end
   end
   options.on "--quality QUALITY", "JPEG quality percentage" do |value|
     quality = value.to_i
@@ -80,9 +87,7 @@ def get(date, satellite, quality)
   end
 end
 
-(0...days).map do |count|
-  date + count
-end.each do |date|
+Range.new(date["start"], date["stop"]).each do |date|
   %w[terra aqua].each do |satellite|
     begin
       get(date, satellite, quality)
@@ -95,6 +100,6 @@ end.each do |date|
       STDERR.puts e.message;
     end
   end
-end if days
+end if Hash === date
 
-get(date, satellite, quality) if !days
+get(date, satellite, quality) unless Hash === date
