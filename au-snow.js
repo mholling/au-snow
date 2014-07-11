@@ -18,7 +18,7 @@
           api_key: 'cef9b7cd3df5f75351acd80f60ff5b47',
           user_id: '97341623@N02',
           per_page: 500,
-          extras: 'date_taken,url_o,machine_tags',
+          extras: 'date_taken,url_o,machine_tags,description',
           format: 'json',
           machine_tags: machine_tags,
           machine_tag_mode: 'all',
@@ -42,6 +42,7 @@
     }
 
     this.overlays = [ ];
+    this.greatestHits = [ ];
 
     this.cache = { };
     this.states.forEach(function(state) {
@@ -50,13 +51,6 @@
         self.cache[state][year] = { };
       });
     });
-
-    this.greatestHits = [
-      { state: 'nsw', date: new Date(2014, 6,  2), satellite: 'aqua',  comment: "(NSW, July 2, PM) Snowmageddon!" },
-      { state: 'nsw', date: new Date(2010, 7, 10), satellite: 'terra', comment: "(NSW, August 10, AM) Cloudy" },
-      { state: 'vic', date: new Date(2014, 6,  2), satellite: 'terra', comment: "(VIC, July 2, AM) Banding" },
-      { state: 'vic', date: new Date(2010, 7,  9), satellite: 'aqua',  comment: "(VIC, August 9, PM) Clear day" },
-    ];
 
     this.loadCache = function(state, year) {
       var loadPhotos = function() {
@@ -79,6 +73,7 @@
           self.cache[state][year].photo = self.cache[state][year].photos[0];
         });
       };
+
       var loadOverlays = function() {
         if (self.cache[state].overlays)
           return $q.when();
@@ -93,7 +88,25 @@
           });
         });
       };
+
       return loadPhotos().then(loadOverlays);
+    };
+
+    this.loadGreatestHits = function() {
+      return flickrSearch({ hit: null, state: null }).success(function(data) {
+        self.greatestHits = data.photos.photo.map(function(photo) {
+          var parts = photo.datetaken.split(/[- :]/);
+          var satellite_match = photo.machine_tags.match(/ausnow:satellite=(terra|aqua)/);
+          var state_match = photo.machine_tags.match(/ausnow:state=(nsw|vic)/);
+          console.log(photo.description);
+          return {
+            date: new Date(parts[0], parts[1]-1, parts[2]),
+            state: state_match && state_match[1],
+            satellite: satellite_match && satellite_match[1],
+            comment: photo.description._content,
+          };
+        });
+      });
     };
 
     this.updateStateAndYear = function(state, year) {
@@ -163,7 +176,7 @@
 
     this.goTo(state, date, satellite).then(function() {
       $location.search('').replace();
-    });
+    }).then(this.loadGreatestHits);
   } ])
 
   .filter('ordinalIndicator', function() {
