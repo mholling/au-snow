@@ -184,13 +184,13 @@
 
   .directive("stopScreenMove", function() {
     return {
-    	restrict: 'A',
-    	scope: true,
-    	link: function(scope, element, attrs) {
+      restrict: 'A',
+      scope: true,
+      link: function(scope, element, attrs) {
         element.on("touchmove", function(event) {
-        	event.preventDefault();
+          event.preventDefault();
         });
-    	},
+      },
     };
   });
 }());
