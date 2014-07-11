@@ -56,6 +56,7 @@
       var loadPhotos = function() {
         if (self.cache[state][year].photos)
           return $q.when();
+        self.loading = true;
         return flickrSearch({ state: state, year: year}).success(function(data) {
           self.cache[state][year].photos = data.photos.photo.map(function(photo) {
             var parts = photo.datetaken.split(/[- :]/);
@@ -71,6 +72,9 @@
             };
           });
           self.cache[state][year].photo = self.cache[state][year].photos[0];
+          self.loading = false;
+        }).error(function() {
+          self.loading = false;
         });
       };
 

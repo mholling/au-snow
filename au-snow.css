@@ -54,6 +54,39 @@ body > section > footer {
 #info .badge {
   padding: 0.4em 0.8em;
 }
+#spinner {
+  background-repeat: no-repeat;
+  background-position: center center;
+  background-image: url("data:image/svg+xml;utf8, <svg version='1.1' id='Layer_1' xmlns='http://www.w3.org/2000/svg' xmlns:xlink='http://www.w3.org/1999/xlink' x='0px' y='0px' width='44px' height='44px' viewBox='2.157 89.121 32 32' enable-background='new 2.157 89.121 32 32' xml:space='preserve'><g><path fill='coral' d='M12.728,100.231l-7.667-4.427l-1.521,2.634l7.662,4.423C11.523,101.876,12.05,100.984,12.728,100.231z'/><path fill='coral' d='M15.897,98.167l-4.424-7.662l-2.632,1.52l4.427,7.668C14.021,99.014,14.911,98.487,15.897,98.167z'/><path fill='coral' d='M27.474,92.024l-2.633-1.52l-4.424,7.662c0.986,0.32,1.876,0.847,2.629,1.525L27.474,92.024z'/><path fill='coral' d='M19.677,97.968v-8.847h-3.04v8.847c0.491-0.104,0.999-0.161,1.521-0.161S19.187,97.864,19.677,97.968z'/><path fill='coral' d='M25.472,105.121c0,0.521-0.057,1.029-0.16,1.52h8.846v-3.039h-8.847 C25.415,104.092,25.472,104.6,25.472,105.121z'/><path fill='coral' d='M25.111,102.861l7.662-4.424l-1.52-2.633l-7.668,4.427C24.265,100.984,24.791,101.875,25.111,102.861z'/><path fill='coral' d='M23.586,110.011l7.668,4.427l1.52-2.633l-7.662-4.423C24.791,108.367,24.265,109.258,23.586,110.011z'/><path fill='coral' d='M16.638,112.275v8.846h3.039l0.001-8.846c-0.491,0.104-0.999,0.16-1.521,0.16 S17.128,112.379,16.638,112.275z'/><path fill='coral' d='M20.418,112.075l4.423,7.663l2.633-1.521l-4.427-7.668C22.294,111.229,21.403,111.755,20.418,112.075z'/><path fill='coral' d='M10.843,105.121c0-0.521,0.057-1.028,0.161-1.52H2.157v3.04h8.846 C10.899,106.15,10.843,105.643,10.843,105.121z'/><path fill='coral' d='M8.841,118.219l2.632,1.52l4.424-7.663c-0.986-0.32-1.877-0.847-2.629-1.524L8.841,118.219z'/><path fill='coral' d='M11.203,107.382l-7.662,4.423l1.521,2.634l7.667-4.427C12.05,109.259,11.523,108.367,11.203,107.382z'/></g></svg>");
+  width: 44px;
+  height: 44px;
+  -moz-animation: sham-spin infinite linear;
+  -moz-transform-origin: 50% 50%;
+  -webkit-animation: sham-spin infinite linear;
+  -webkit-transform-origin: 50% 50%;
+  -o-animation: sham-spin infinite linear;
+  -o-transform-origin: 50% 50%;
+  animation: sham-spin infinite linear;
+  transform-origin: 50% 50%;
+  animation-duration: 2s;
+  -webkit-animation-duration: 2s;
+}
+@-moz-keyframes sham-spin {
+  0 { -moz-transform: rotate(0); }
+  100% { -moz-transform: rotate(360deg); }
+}
+@-webkit-keyframes sham-spin {
+  0% { -webkit-transform: rotate(0); }
+  100% { -webkit-transform: rotate(360deg); }
+}
+@keyframes sham-spin {
+  0% { m: rotate(0); }
+  100% { transform: rotate(360deg); }
+}
+@-o-keyframes sham-spin {
+  0% { -o-transform: rotate(0); }
+  100% { -o-transform: rotate(360deg); }
+}
 #photos {
   margin: 8px 0 0;
 }
