@@ -98,7 +98,6 @@
           var parts = photo.datetaken.split(/[- :]/);
           var satellite_match = photo.machine_tags.match(/ausnow:satellite=(terra|aqua)/);
           var state_match = photo.machine_tags.match(/ausnow:state=(nsw|vic)/);
-          console.log(photo.description);
           return {
             date: new Date(parts[0], parts[1]-1, parts[2]),
             state: state_match && state_match[1],
