@@ -52,8 +52,7 @@ end.parse!
 
 UnavailableError = Class.new(StandardError);
 
-def get(date, satellite, quality)
-  photosets = flickr.photosets.getList
+def get(date, satellite, quality, photosets)
   Dir.mktmpdir do |dir|
     dir = Pathname.new(dir)
     specifiers = "%d%03d.%s.250m" % [ date.year, date.yday, satellite ]
@@ -91,23 +90,26 @@ def get(date, satellite, quality)
   end
 end
 
-Range.new(date["start"], date["stop"]).each do |date|
-  %w[terra aqua].each do |satellite|
-    begin
-      get(date, satellite, quality)
-      STDOUT.puts "#{date} #{satellite}: downloaded"
-    rescue UnavailableError => e
-      STDERR.puts "#{date} #{satellite}: #{e.message}"
-    rescue StandardError => e
-      STDERR.puts "#{date} #{satellite}: #{e.message}"
-      STDERR.puts "retrying..."
-      retry
+if Hash === date
+  photosets = flickr.photosets.getList
+  Range.new(date["start"], date["stop"]).each do |date|
+    %w[terra aqua].each do |satellite|
+      begin
+        get(date, satellite, quality, photosets)
+        STDOUT.puts "#{date} #{satellite}: downloaded"
+      rescue UnavailableError => e
+        STDERR.puts "#{date} #{satellite}: #{e.message}"
+      rescue StandardError => e
+        STDERR.puts "#{date} #{satellite}: #{e.message}"
+        STDERR.puts "retrying..."
+        retry
+      end
     end
   end
-end if Hash === date
+end
 
 begin
-  get(date, satellite, quality)
+  get(date, satellite, quality, flickr.photosets.getList)
 rescue UnavailableError => e
   abort "#{date} #{satellite}: #{e.message}"
 rescue StandardError => e
