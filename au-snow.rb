@@ -7,6 +7,7 @@ satellite = "terra"
 FlickRaw.api_key = "cef9b7cd3df5f75351acd80f60ff5b47"
 days = nil
 quality = 60
+tries = 1
 
 OptionParser.new("usage: au-snow.rb [options]") do |options|
   options.on "--date DATE", "date of satellite imagery" do |value|
@@ -30,6 +31,9 @@ OptionParser.new("usage: au-snow.rb [options]") do |options|
   end
   options.on "--access-secret SECRET", "flickr access secret" do |value|
     flickr.access_secret = value
+  end
+  options.on "--tries TRIES", "limit upload attempts" do |value|
+    tries = value.to_i
   end
   %w[start stop].each do |name|
     options.on "--#{name} #{name.upcase}", "#{name} date for batch download" do |value|
@@ -101,4 +105,13 @@ Range.new(date["start"], date["stop"]).each do |date|
   end
 end if Hash === date
 
-get(date, satellite, quality) unless Hash === date
+begin
+  get(date, satellite, quality)
+rescue UnavailableError => e
+  abort "#{date} #{satellite}: #{e.message}"
+rescue StandardError => e
+  STDERR.puts "#{date} #{satellite}: #{e.message}"
+  abort unless (tries -= 1) > 0
+  STDERR.puts "retrying..."
+  retry
+end unless Hash === date
