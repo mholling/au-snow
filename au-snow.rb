@@ -53,6 +53,7 @@ end.parse!
 UnavailableError = Class.new(StandardError);
 
 def get(date, satellite, quality)
+  photosets = flickr.photosets.getList
   Dir.mktmpdir do |dir|
     dir = Pathname.new(dir)
     specifiers = "%d%03d.%s.250m" % [ date.year, date.yday, satellite ]
@@ -80,10 +81,10 @@ def get(date, satellite, quality)
       flickr.upload_photo(jpg, :title => title, :tags => "ausnow:year=#{date.year} ausnow:state=#{state} ausnow:satellite=#{satellite}").tap do |id|
         flickr.photos.setDates(:photo_id => id, :date_taken => time.strftime("%F %T"))
         flickr.photos.setPerms(:photo_id => id, :is_public => 1, :is_friend => 0, :is_family => 1, :perm_comment => 0, :perm_addmeta => 0)
-        flickr.photosets.getList.find do |set|
+        photosets.find do |set|
           set.title == set_title
         end.tap do |set|
-          set ? flickr.photosets.addPhoto(:photoset_id => set.id, :photo_id => id) : flickr.photosets.create(:title => set_title, :primary_photo_id => id)
+          flickr.photosets.addPhoto(:photoset_id => set.id, :photo_id => id) if set
         end
       end unless flickr.photos.search(:user_id => "me", :text => title).any?
     end
