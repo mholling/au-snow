@@ -85,9 +85,11 @@
           </div>
         </div>
         <ul id="photos" class="pagination" ng-class="'count-' + snow.countBy(25)">
-          <li ng-click="snow.prev()" ng-class="{ disabled: snow.isFirst() }" class="arrow"><a></a></li>
           <li ng-repeat="photo in snow.photos" ng-class="{ active: photo == snow.photo }" ng-mouseenter="snow.photo = photo" ng-click="snow.photo = photo"><a></a></li>
-          <li ng-click="snow.next()" ng-class="{ disabled: snow.isLast() }" class="arrow"><a></a></li>
+        </ul>
+        <ul id="arrows" class="pagination">
+          <li ng-click="snow.prev()" ng-class="{ disabled: snow.isFirst() }"><a></a></li>
+          <li ng-click="snow.next()" ng-class="{ disabled: snow.isLast() }"><a></a></li>
         </ul>
       </div>
       <footer>

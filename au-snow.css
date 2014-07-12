@@ -90,12 +90,14 @@ body > section > footer {
   0% { -o-transform: rotate(0); }
   100% { -o-transform: rotate(360deg); }
 }
-#photos {
+#photos, #arrows {
   margin: 8px 0 0;
+}
+#photos li a, #arrows li a {
+  height: 50px;
 }
 #photos li a {
   padding: 0;
-  height: 50px;
   width: 2px;
 }
 #photos.count-175 li a, #photos.count-200 li a, #photos.count-225 li a {
@@ -113,21 +115,15 @@ body > section > footer {
 #photos.count-25 li a, #photos.count-50 li a {
   width: 8px;
 }
-#photos li.arrow a {
-  width: inherit;
-  padding-left: 10px;
-  padding-right: 10px;
-  padding-top: 14px;
+#arrows {
+  margin-left: 11px;
 }
-#photos li:first-child a {
-  margin-right: 10px;
+#arrows li a {
+  padding: 14px 11px 0
 }
-#photos li:last-child a {
-  margin-left: 10px;
-}
-#photos li:first-child a:before {
+#arrows li:first-child a:before {
   content: '\25C0';
 }
-#photos li:last-child a:before {
+#arrows li:last-child a:before {
   content: '\25b6';
 }
