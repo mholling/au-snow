@@ -33,6 +33,9 @@ body > section > footer {
   left: auto;
   right: -20%;
 }
+#greatest-hits button:not(.dropdown-toggle), #years button:not(.dropdown-toggle) {
+  opacity: 1.0;
+}
 #photo {
   margin: 5px auto 0;
   position: relative;
