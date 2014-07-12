@@ -73,9 +73,8 @@ def get(date, satellite, quality)
       jpg = dir + "#{title}.jpg"
       %x[gdal_translate -projwin #{window} "#{img}" "#{tif}"]
       %x[convert -quiet "#{tif}" -quality #{quality}% "#{jpg}"]
-      flickr.upload_photo(jpg, :title => title).tap do |id|
+      flickr.upload_photo(jpg, :title => title, :tags => "ausnow:year=#{date.year} ausnow:state=#{state} ausnow:satellite=#{satellite}").tap do |id|
         flickr.photos.setDates(:photo_id => id, :date_taken => time.strftime("%F %T"))
-        flickr.photos.setTags(:photo_id => id, :tags => "ausnow:year=#{date.year} ausnow:state=#{state} ausnow:satellite=#{satellite}")
         flickr.photos.setPerms(:photo_id => id, :is_public => 1, :is_friend => 0, :is_family => 1, :perm_comment => 0, :perm_addmeta => 0)
         flickr.photosets.getList.find do |set|
           set.title == set_title
