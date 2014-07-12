@@ -51,7 +51,7 @@
         </ul>
         <div id="greatest-hits" class="dropdown btn-group btn-group-sm" ng-if="snow.greatestHits.length > 0">
           <button class="btn btn-default disabled" type="button">
-            Notable
+            notable
           </button>
           <button class="btn btn-default dropdown-toggle" type="button">
             <span class="caret"></span>
@@ -85,7 +85,7 @@
           </div>
         </div>
         <ul id="photos" class="pagination" ng-class="'count-' + snow.countBy(25)">
-          <li ng-repeat="photo in snow.photos" ng-class="{ active: photo == snow.photo }" ng-mouseenter="snow.photo = photo" ng-click="snow.photo = photo"><a></a></li>
+          <li ng-repeat="photo in snow.photos" ng-class="{ active: photo == snow.photo }" ng-click="snow.photo = photo"><a></a></li>
         </ul>
         <ul id="arrows" class="pagination">
           <li ng-click="snow.prev()" ng-class="{ disabled: snow.isFirst() }"><a></a></li>
