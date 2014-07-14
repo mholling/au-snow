@@ -63,8 +63,8 @@ def get(date, satellite, quality, photosets)
       path
     end
     raise UnavailableError.new("data not available") if txt.read[/error/i]
-    time = txt.read.each_line.grep(/^(\d\d):(\d\d) UTC/) do
-      Time.utc(date.year, date.month, date.day, $1.to_i, $2.to_i)
+    time = txt.read.each_line.grep(/granule=[T|A](\d\d\d\d\d\d\d\d\d)/) do
+      DateTime.strptime($1, "%y%j%H%M").to_time
     end.last.getlocal("+10:00")
 
     [
