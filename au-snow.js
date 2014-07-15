@@ -100,7 +100,21 @@
               width: photo.width_o,
               height: photo.height_o,
             };
-          });
+          }).reduce(function(result, photo, index, photos) {
+            result.push(photo);
+            if (index + 1 >= photos.length)
+              return result;
+            var diff = photos[index + 1].date - photo.date;
+            if (diff <= 0)
+              return result;
+            if (photo.satellite == "terra")
+              result.push(null);
+            if (photos[index + 1].satellite == "aqua")
+              result.push(null);
+            for (; diff > 86400000; diff -= 43200000)
+              result.push(null);
+            return result;
+          }, [ ]);
           self.cache[state][year].photo = self.cache[state][year].photos[0];
           self.loading = false;
         }).error(function() {
