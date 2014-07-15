@@ -89,7 +89,7 @@
         self.loading = true;
         return flickrSearch({ state: state, year: year}).success(function(data) {
           self.cache[state][year].photos = data.photos.photo.sort(function(photo1, photo2) {
-            return photo1.datetaken < photo2.datetaken ?  1 : photo1.datetaken > photo2.datetaken ? 1 : 0;
+            return photo1.datetaken < photo2.datetaken ? -1 : photo1.datetaken > photo2.datetaken ? 1 : 0;
           }).map(function(photo) {
             var parts = photo.datetaken.split(/[- :]/);
             var match = photo.machine_tags.match(/ausnow:satellite=(terra|aqua)/);
