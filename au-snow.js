@@ -138,6 +138,7 @@
     this.updatePhoto = function(date, satellite) {
       for (var index = 0; index < this.photos.length; ++index) {
         this.photo = this.photos[index];
+        if (!this.photo) { continue; }
         if (this.photo.date < date) { continue; }
         if (this.photo.date > date) { break; }
         if (!satellite) { break; }
@@ -157,14 +158,14 @@
     };
 
     this.prev = function() {
-      var index = this.photos.indexOf(this.photo);
-      if (index > 0)
-        this.photo = this.photos[index - 1];
+      for (var index = this.photos.indexOf(this.photo) - 1; index >= 0 && !this.photos[index]; --index) ;
+      if (index >= 0)
+        this.photo = this.photos[index];
     };
     this.next = function() {
-      var index = this.photos.indexOf(this.photo);
-      if (index < this.photos.length - 1)
-        this.photo = this.photos[index + 1];
+      for (var index = this.photos.indexOf(this.photo) + 1; index < this.photos.length && !this.photos[index]; ++index) ;
+      if (index < this.photos.length)
+        this.photo = this.photos[index];
     };
 
     this.isFirst = function() {

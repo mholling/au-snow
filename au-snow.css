@@ -115,6 +115,13 @@ body > section > footer {
 #photos.count-25 li a, #photos.count-50 li a {
   width: 8px;
 }
+#photos li:not(.active) a {
+  background-color: #ddd;
+}
+#photos li.disabled a {
+  border-color: #eee;
+  background-color: #eee;
+}
 #arrows {
   margin-left: 11px;
 }
