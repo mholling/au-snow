@@ -20,9 +20,9 @@
       ga('send', 'pageview');
     </script>
   </head>
-  <body>
-    <section ng-controller="SnowController as snow" ng-show="snow.year" stop-screen-move>
-      <div class="btn-toolbar">
+  <body ng-controller="SnowController as snow">
+    <section stop-screen-move>
+      <div class="btn-toolbar" ng-show="snow.year">
         <ul id="states" class="btn-group btn-group-sm">
           <li class="btn btn-default" ng-repeat="state in snow.states" ng-class="{ active: state == snow.state }" ng-click="snow.setState(state)">
             {{ state | uppercase }}
@@ -68,7 +68,7 @@
         <div id="photo" ng-style="{ 'background-image': 'url('+snow.photo.url+')', width: snow.photo.width+'px', height: snow.photo.height+'px' }" ng-swipe-left="snow.next()" ng-swipe-right="snow.prev()">
           <div class="overlay" ng-repeat="overlay in snow.overlays" ng-style="{ 'background-image': 'url('+overlay.url+')' }" ng-show="overlay.active">
           </div>
-          <div class="overlay" id="spinner" ng-show="snow.loading"></div>
+          <div class="overlay spinner" ng-show="snow.loading"></div>
           <div id="permalink">
             <a class="badge pull-right" ng-href="{{ snow.photo.permalink }}">
               <span class="glyphicon glyphicon-link"></span>
@@ -91,11 +91,17 @@
           <li ng-click="snow.next()" ng-class="{ disabled: snow.isLast() }"><a></a></li>
         </ul>
       </div>
-      <footer>
+      <footer ng-show="snow.year">
         Imagery by <a href="http://lance-modis.eosdis.nasa.gov/imagery/subsets/?area=global">MODIS</a>,
         hosting by <a href="https://www.flickr.com">Flickr</a> &amp; <a href="https://github.com">GitHub</a>,
         code by <a href="https://github.com/mholling/au-snow/tree/gh-pages">Matthew Hollingworth</a>.
       </footer>
+      <div id="startup" ng-if="!snow.year">
+        <div class="spinner"></div>
+        <div>
+          Loading &ndash; please wait &hellip;
+        </div>
+      </div>
     </section>
   </body>
 </html>
