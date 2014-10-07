@@ -58,7 +58,7 @@ def get(date, satellite, quality, photosets)
     specifiers = "%d%03d.%s.250m" % [ date.year, date.yday, satellite ]
     img, jgw, txt = [ %w[jpg jgw txt], %w[wb w w] ].transpose.map do |ext, flags|
       path = dir + "#{specifiers}.#{ext}"
-      uri = URI.parse("http://lance2.modaps.eosdis.nasa.gov/imagery/subsets/?project=fas&subset=FAS_SEAustralia3.#{specifiers}.#{ext}")
+      uri = URI.parse("http://lance-modis.eosdis.nasa.gov/imagery/subsets/?project=fas&subset=FAS_SEAustralia3.#{specifiers}.#{ext}")
       path.open(flags) { |file| file << uri.read }
       path
     end
