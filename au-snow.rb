@@ -17,7 +17,7 @@ OptionParser.new("usage: au-snow.rb [options]") do |options|
       options.abort "bad date"
     end
   end
-  options.on "--satellite [terra|aqua]", "MODIS satellite", %w[terra aqua] do |value|
+  options.on "--satellite [terra|suomi|aqua]", "satellite", %w[terra suomi aqua] do |value|
     satellite = value
   end
   options.on "--api-key KEY", "flickr API key" do |value|
@@ -69,6 +69,7 @@ def get(date, satellite, quality, photosets)
     
     layer, seconds = case satellite
     when "terra" then [ "MODIS_Terra_CorrectedReflectance_TrueColor",  9 * 3600 ]
+    when "suomi" then [  "VIIRS_SNPP_CorrectedReflectance_TrueColor", 12 * 3600 ]
     when "aqua"  then [  "MODIS_Aqua_CorrectedReflectance_TrueColor", 15 * 3600 ]
     end
     
@@ -109,7 +110,7 @@ def get(date, satellite, quality, photosets)
         end.tap do |set|
           flickr.photosets.addPhoto(:photoset_id => set.id, :photo_id => id) if set
         end
-      end 
+      end
     end
     true
   end
@@ -118,7 +119,7 @@ end
 if Hash === date
   photosets = flickr.photosets.getList
   Range.new(date["start"], date["stop"]).each do |date|
-    %w[terra aqua].each do |satellite|
+    %w[terra suomi aqua].each do |satellite|
       begin
         message = get(date, satellite, quality, photosets) ? "downloaded" : "images already exist"
         STDOUT.puts "#{date} %5s: #{message}" % satellite
