@@ -55,8 +55,8 @@ UnavailableError = Class.new(StandardError);
 def get(date, satellite, quality, photosets)
   Dir.mktmpdir do |dir|
     outstanding = [
-      [ "nsw", "147.768908 -35.414950 149.112564 -36.929548" ],
-      [ "vic", "146.141080 -36.632428 147.541791 -37.918267" ],
+      [ "nsw", "147.768908 -36.929548 149.112564 -35.414950" ],
+      [ "vic", "146.141080 -37.918267 147.541791 -36.632428" ],
     ].map do |state, window|
       [ state, "#{state}-#{date}-#{satellite}", "au-snow-#{state}", window ]
     end.reject do |state, title, set_title, window|
@@ -65,22 +65,41 @@ def get(date, satellite, quality, photosets)
     return false unless outstanding.any?
     
     dir = Pathname.new(dir)
-    specifiers = "%d%03d.%s.250m" % [ date.year, date.yday, satellite ]
-    img, jgw, txt = [ %w[jpg jgw txt], %w[wb w w] ].transpose.map do |ext, flags|
-      path = dir + "#{specifiers}.#{ext}"
-      uri = URI.parse("https://lance-modis.eosdis.nasa.gov/imagery/subsets/?project=fas&subset=FAS_SEAustralia3.#{specifiers}.#{ext}")
-      path.open(flags) { |file| file << uri.read }
-      path
+    wms = dir + 'wms.xml'
+    
+    layer, seconds = case satellite
+    when "terra" then [ "MODIS_Terra_CorrectedReflectance_TrueColor",  9 * 3600 ]
+    when "aqua"  then [  "MODIS_Aqua_CorrectedReflectance_TrueColor", 15 * 3600 ]
     end
-    raise UnavailableError.new("data not available") if txt.read[/error/i]
-    time = txt.read.each_line.grep(/granule=[T|A](\d\d\d\d\d\d\d\d\d)/) do
-      DateTime.strptime($1, "%y%j%H%M").to_time
-    end.last.getlocal("+10:00")
-
+    
+    wms.write <<-EOF
+<GDAL_WMS>
+    <Service name="TMS">
+        <ServerUrl>http://map1.vis.earthdata.nasa.gov/wmts-geo/#{layer}/default/#{date}/EPSG4326_250m/${z}/${y}/${x}.jpg</ServerUrl>
+    </Service>
+    <DataWindow>
+        <UpperLeftX>-180.0</UpperLeftX>
+        <UpperLeftY>90</UpperLeftY>
+        <LowerRightX>396.0</LowerRightX>
+        <LowerRightY>-198</LowerRightY>
+        <TileLevel>8</TileLevel>
+        <TileCountX>2</TileCountX>
+        <TileCountY>1</TileCountY>
+        <YOrigin>top</YOrigin>
+    </DataWindow>
+    <Projection>EPSG:4326</Projection>
+    <BlockSizeX>512</BlockSizeX>
+    <BlockSizeY>512</BlockSizeY>
+    <BandsCount>3</BandsCount>
+</GDAL_WMS>
+    EOF
+    time = date.to_time.getlocal("+10:00") + seconds
+    
     outstanding.each do |state, title, set_title, window|
       tif = dir + "#{title}.tif"
       jpg = dir + "#{title}.jpg"
-      %x[gdal_translate -projwin #{window} "#{img}" "#{tif}"]
+      %x[gdalwarp -tr 0.002596125 -0.002248294118 -te #{window} "#{wms}" "#{tif}"]
+      raise UnavailableError.new("data not available") unless $?.success?
       %x[convert -quiet "#{tif}" -quality #{quality}% "#{jpg}"]
       flickr.upload_photo(jpg, :title => title, :tags => "ausnow:year=#{date.year} ausnow:state=#{state} ausnow:satellite=#{satellite}").tap do |id|
         flickr.photos.setDates(:photo_id => id, :date_taken => time.strftime("%F %T"))
