@@ -68,9 +68,9 @@ def get(date, satellite, quality, photosets)
     wms = dir + 'wms.xml'
     
     layer, seconds = case satellite
-    when "terra" then [ "MODIS_Terra_CorrectedReflectance_TrueColor",  9 * 3600 ]
-    when "suomi" then [  "VIIRS_SNPP_CorrectedReflectance_TrueColor", 12 * 3600 ]
-    when "aqua"  then [  "MODIS_Aqua_CorrectedReflectance_TrueColor", 15 * 3600 ]
+    when "terra" then [ "MODIS_Terra_CorrectedReflectance_TrueColor", 37800 ] # 10:30
+    when "suomi" then [  "VIIRS_SNPP_CorrectedReflectance_TrueColor", 48600 ] # 13:30
+    when "aqua"  then [  "MODIS_Aqua_CorrectedReflectance_TrueColor", 48600 ] # 13:30
     end
     
     wms.write <<-EOF
