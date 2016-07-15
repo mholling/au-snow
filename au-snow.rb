@@ -54,6 +54,16 @@ UnavailableError = Class.new(StandardError);
 
 def get(date, satellite, quality, photosets)
   Dir.mktmpdir do |dir|
+    outstanding = [
+      [ "nsw", "147.768908 -35.414950 149.112564 -36.929548" ],
+      [ "vic", "146.141080 -36.632428 147.541791 -37.918267" ],
+    ].map do |state, window|
+      [ state, "#{state}-#{date}-#{satellite}", "au-snow-#{state}", window ]
+    end.reject do |state, title, set_title, window|
+      flickr.photos.search(:user_id => "me", :text => title).any?
+    end
+    return false unless outstanding.any?
+    
     dir = Pathname.new(dir)
     specifiers = "%d%03d.%s.250m" % [ date.year, date.yday, satellite ]
     img, jgw, txt = [ %w[jpg jgw txt], %w[wb w w] ].transpose.map do |ext, flags|
@@ -67,12 +77,7 @@ def get(date, satellite, quality, photosets)
       DateTime.strptime($1, "%y%j%H%M").to_time
     end.last.getlocal("+10:00")
 
-    [
-      [ "nsw", "147.768908 -35.414950 149.112564 -36.929548" ],
-      [ "vic", "146.141080 -36.632428 147.541791 -37.918267" ],
-    ].each do |state, window|
-      title = "#{state}-#{date}-#{satellite}"
-      set_title = "au-snow-#{state}"
+    outstanding.each do |state, title, set_title, window|
       tif = dir + "#{title}.tif"
       jpg = dir + "#{title}.jpg"
       %x[gdal_translate -projwin #{window} "#{img}" "#{tif}"]
@@ -85,8 +90,9 @@ def get(date, satellite, quality, photosets)
         end.tap do |set|
           flickr.photosets.addPhoto(:photoset_id => set.id, :photo_id => id) if set
         end
-      end unless flickr.photos.search(:user_id => "me", :text => title).any?
+      end 
     end
+    true
   end
 end
 
@@ -95,12 +101,12 @@ if Hash === date
   Range.new(date["start"], date["stop"]).each do |date|
     %w[terra aqua].each do |satellite|
       begin
-        get(date, satellite, quality, photosets)
-        STDOUT.puts "#{date} #{satellite}: downloaded"
+        message = get(date, satellite, quality, photosets) ? "downloaded" : "images already exist"
+        STDOUT.puts "#{date} %5s: #{message}" % satellite
       rescue UnavailableError => e
-        STDERR.puts "#{date} #{satellite}: #{e.message}"
+        STDERR.puts "#{date} %5s: #{e.message}" % satellite
       rescue StandardError => e
-        STDERR.puts "#{date} #{satellite}: #{e.message}"
+        STDERR.puts "#{date} %5s: #{e.message}" % satellite
         STDERR.puts "retrying..."
         retry
       end
@@ -109,11 +115,12 @@ if Hash === date
 end
 
 begin
-  get(date, satellite, quality, flickr.photosets.getList)
+  message = get(date, satellite, quality, flickr.photosets.getList) ? "downloaded" : "images already exist"
+  STDOUT.puts "#{date} %5s: #{message}" % satellite
 rescue UnavailableError => e
-  abort "#{date} #{satellite}: #{e.message}"
+  abort "#{date} %5s: #{e.message}" % satellite
 rescue StandardError => e
-  STDERR.puts "#{date} #{satellite}: #{e.message}"
+  STDERR.puts "#{date} %5s: #{e.message}" % satellite
   abort unless (tries -= 1) > 0
   STDERR.puts "retrying..."
   retry
