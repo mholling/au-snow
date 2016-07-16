@@ -101,6 +101,7 @@ def get(date, satellite, quality, photosets)
       jpg = dir + "#{title}.jpg"
       %x[gdalwarp -tr 0.002596125 -0.002248294118 -te #{window} "#{wms}" "#{tif}"]
       raise UnavailableError.new("data not available") unless $?.success?
+      raise UnavailableError.new("data not available") if %x[convert "#{tif}" -quiet -format "%[mean]" info:] == ?0
       %x[convert -quiet "#{tif}" -quality #{quality}% "#{jpg}"]
       flickr.upload_photo(jpg, :title => title, :tags => "ausnow:year=#{date.year} ausnow:state=#{state} ausnow:satellite=#{satellite}").tap do |id|
         flickr.photos.setDates(:photo_id => id, :date_taken => time.strftime("%F %T"))
