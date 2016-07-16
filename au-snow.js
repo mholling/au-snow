@@ -70,7 +70,7 @@
       return flickrSearch({ hit: null, state: null }).success(function(data) {
         self.greatestHits = data.photos.photo.map(function(photo) {
           var parts = photo.datetaken.split(/[- :]/);
-          var satellite_match = photo.machine_tags.match(/ausnow:satellite=(terra|aqua)/);
+          var satellite_match = photo.machine_tags.match(/ausnow:satellite=(terra|suomi|aqua)/);
           var state_match = photo.machine_tags.match(/ausnow:state=(nsw|vic)/);
           return {
             date: new Date(parts[0], parts[1]-1, parts[2]),
@@ -92,7 +92,7 @@
             return photo1.datetaken < photo2.datetaken ? -1 : photo1.datetaken > photo2.datetaken ? 1 : 0;
           }).map(function(photo) {
             var parts = photo.datetaken.split(/[- :]/);
-            var match = photo.machine_tags.match(/ausnow:satellite=(terra|aqua)/);
+            var match = photo.machine_tags.match(/ausnow:satellite=(terra|suomi|aqua)/);
             var satellite = match && match[1];
             return {
               url: photo.url_o,
@@ -111,7 +111,7 @@
               return result;
             if (photo.satellite == "terra")
               result.push(null);
-            if (photos[index + 1].satellite == "aqua")
+            if (photos[index + 1].satellite != "terra")
               result.push(null);
             for (; diff > 86400000; diff -= 43200000)
               result.push(null);
