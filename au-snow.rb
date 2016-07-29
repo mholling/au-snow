@@ -137,17 +137,15 @@ end
 if Hash === date
   photosets = flickr.photosets.getList
   Range.new(date["start"], date["stop"]).each do |date|
-    %w[terra suomi aqua].each do |satellite|
-      begin
-        message = get(date, satellite, colour, quality, photosets) ? "downloaded" : "images already exist"
-        STDOUT.puts "#{date} %5s %5s-colour: #{message}" % [ satellite, colour ]
-      rescue UnavailableError => e
-        STDERR.puts "#{date} %5s %5s-colour: #{e.message}" % [ satellite, colour ]
-      rescue StandardError => e
-        STDERR.puts "#{date} %5s %5s-colour: #{e.message}" % [ satellite, colour ]
-        STDERR.puts "retrying..."
-        retry
-      end
+    begin
+      message = get(date, satellite, colour, quality, photosets) ? "downloaded" : "images already exist"
+      STDOUT.puts "#{date} %5s %5s-colour: #{message}" % [ satellite, colour ]
+    rescue UnavailableError => e
+      STDERR.puts "#{date} %5s %5s-colour: #{e.message}" % [ satellite, colour ]
+    rescue StandardError => e
+      STDERR.puts "#{date} %5s %5s-colour: #{e.message}" % [ satellite, colour ]
+      STDERR.puts "retrying..."
+      retry
     end
   end
 end
