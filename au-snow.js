@@ -219,7 +219,7 @@
       return self.goTo({
         state: self.states.indexOf($location.search().state) < 0 ? self.states[0] : $location.search().state,
         satellite: $location.search().satellite,
-        colour: self.colours.indexOf($location.search().colour) < 0 ? self.colours[0] : $location.search().colours,
+        colour: self.colours.indexOf($location.search().colour) < 0 ? self.colours[0] : $location.search().colour,
         date: new Date(
           self.years.indexOf($location.search().year) < 0 ? self.years[self.years.length - 1] : $location.search().year,
           ($location.search().month || 12) - 1,
