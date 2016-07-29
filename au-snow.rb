@@ -119,8 +119,7 @@ def get(date, satellite, colour, quality, photosets)
       raise UnavailableError.new("data not available") unless $?.success?
       raise UnavailableError.new("data not available") if %x[convert "#{tif}" -quiet -format "%[mean]" info:] == ?0
       %x[convert -quiet "#{tif}" -quality #{quality}% "#{jpg}"]
-      tags = %W[ausnow:year=#{date.year} ausnow:state=#{state} ausnow:satellite=#{satellite}]
-      tags << "ausnow:type=falsecolour" unless colour
+      tags = %W[ausnow:year=#{date.year} ausnow:state=#{state} ausnow:satellite=#{satellite} ausnow:colour=#{colour}colour]
       flickr.upload_photo(jpg, :title => title, :tags => tags.join(?\s)).tap do |id|
         flickr.photos.setDates(:photo_id => id, :date_taken => time.strftime("%F %T"))
         flickr.photos.setPerms(:photo_id => id, :is_public => 1, :is_friend => 0, :is_family => 1, :perm_comment => 0, :perm_addmeta => 0)
@@ -141,11 +140,11 @@ if Hash === date
     %w[terra suomi aqua].each do |satellite|
       begin
         message = get(date, satellite, colour, quality, photosets) ? "downloaded" : "images already exist"
-        STDOUT.puts "#{date} %5s %5s colour: #{message}" % [ satellite, colour ]
+        STDOUT.puts "#{date} %5s %5s-colour: #{message}" % [ satellite, colour ]
       rescue UnavailableError => e
-        STDERR.puts "#{date} %5s %5s colour: #{e.message}" % [ satellite, colour ]
+        STDERR.puts "#{date} %5s %5s-colour: #{e.message}" % [ satellite, colour ]
       rescue StandardError => e
-        STDERR.puts "#{date} %5s %5s colour: #{e.message}" % [ satellite, colour ]
+        STDERR.puts "#{date} %5s %5s-colour: #{e.message}" % [ satellite, colour ]
         STDERR.puts "retrying..."
         retry
       end
