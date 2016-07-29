@@ -28,6 +28,14 @@
             {{ state | uppercase }}
           </li>
         </ul>
+        <ul id="colour" class="btn-group btn-group-sm">
+          <li class="btn btn-default" ng-class="{ active: snow.colour == 'truecolour' }" ng-click="snow.setColour('truecolour')">
+            true-colour
+          </li>
+          <li class="btn btn-default" ng-class="{ active: snow.colour == 'falsecolour' }" ng-click="snow.setColour('falsecolour')">
+            enhanced
+          </li>
+        </ul>
         <div id="years" class="dropdown btn-group btn-group-sm">
           <button class="btn btn-default disabled" type="button">
             {{ snow.year }}
@@ -43,11 +51,21 @@
             </li>
           </ul>
         </div>
-        <ul id="overlays" class="btn-group btn-group-sm" ng-if="snow.overlays.length > 0">
-          <li class="btn btn-default" ng-repeat="overlay in snow.overlays" ng-class="{ active: overlay.active }" ng-click="overlay.active = !overlay.active">
-            {{ overlay.name }}
-          </li>
-        </ul>
+        <div id="overlays" class="dropdown btn-group btn-group-sm" ng-if="snow.overlays.length > 0">
+          <button class="btn btn-default disabled" type="button">
+            overlays
+          </button>
+          <button class="btn btn-default dropdown-toggle" type="button">
+            <span class="caret"></span>
+          </button>
+          <ul class="dropdown-menu">
+            <li ng-repeat="overlay in snow.overlays" ng-class="{ active: overlay.active }">
+              <a tabindex="-1" href dropdown-toggle ng-click="overlay.active = !overlay.active">
+                {{ overlay.name }}
+              </a>
+            </li>
+          </ul>
+        </div>
         <div id="greatest-hits" class="dropdown btn-group btn-group-sm" ng-if="snow.greatestHits.length > 0">
           <button class="btn btn-default disabled" type="button">
             notable

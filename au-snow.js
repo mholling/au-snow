@@ -48,6 +48,7 @@
     var self = this;
 
     this.states = [ 'nsw', 'vic' ]; // TODO: add Tasmania!
+    this.colours = [ 'truecolour', 'falsecolour' ];
 
     this.loadYears = function() {
       return flickrTagValues('year').success(function(data) {
@@ -61,6 +62,9 @@
           self.cache[state] = { };
           self.years.forEach(function(year) {
             self.cache[state][year] = { };
+            self.colours.forEach(function(colour) {
+              self.cache[state][year][colour] = { };
+            });
           });
         });
       });
@@ -82,13 +86,13 @@
       });
     };
 
-    this.loadCache = function(state, year) {
+    this.loadCache = function(state, year, colour) {
       var loadPhotos = function() {
-        if (self.cache[state][year].photos)
+        if (self.cache[state][year][colour].photos)
           return $q.when();
         self.loading = true;
-        return flickrSearch({ state: state, year: year}).success(function(data) {
-          self.cache[state][year].photos = data.photos.photo.sort(function(photo1, photo2) {
+        return flickrSearch({ state: state, year: year, colour: colour}).success(function(data) {
+          self.cache[state][year][colour].photos = data.photos.photo.sort(function(photo1, photo2) {
             return photo1.datetaken < photo2.datetaken ? -1 : photo1.datetaken > photo2.datetaken ? 1 : 0;
           }).map(function(photo) {
             var parts = photo.datetaken.split(/[- :]/);
@@ -98,7 +102,7 @@
               url: photo.url_o,
               date: new Date(parts[0], parts[1]-1, parts[2]),
               satellite: satellite,
-              permalink: '?state=' + state + '&year=' + parts[0] + '&month=' + parts[1] + '&day=' + parts[2] + '&satellite=' + satellite,
+              permalink: '?state=' + state + '&year=' + parts[0] + '&month=' + parts[1] + '&day=' + parts[2] + '&satellite=' + satellite + '&colour=' + colour,
               width: photo.width_o,
               height: photo.height_o,
             };
@@ -117,7 +121,7 @@
               result.push(null);
             return result;
           }, [ ]);
-          self.cache[state][year].photo = self.cache[state][year].photos[0];
+          self.cache[state][year][colour].photo = self.cache[state][year][colour].photos[0];
           self.loading = false;
         }).error(function() {
           self.loading = false;
@@ -142,34 +146,42 @@
       return loadPhotos().then(loadOverlays);
     };
 
-    this.updateStateAndYear = function(state, year) {
-      if (this.state && this.year)
-        this.cache[this.state][this.year].photo = this.photo;
+    this.updateSet = function(state, year, colour) {
+      if (this.state && this.year && this.colour)
+        this.cache[this.state][this.year][this.colour].photo = this.photo;
       this.state = state;
       this.year = year;
-      this.photos = this.cache[state][year].photos;
-      this.photo = this.cache[state][year].photo;
+      this.colour = colour;
+      this.photos = this.cache[state][year][colour].photos;
+      this.photo = this.cache[state][year][colour].photo;
       this.overlays = this.cache[state].overlays;
     };
-    this.updatePhoto = function(date, satellite) {
+    this.updatePhoto = function(date, satellite, colour) {
       for (var index = 0; index < this.photos.length; ++index) {
         this.photo = this.photos[index];
         if (!this.photo) { continue; }
         if (this.photo.date < date) { continue; }
         if (this.photo.date > date) { break; }
         if (!satellite) { break; }
-        if (satellite == this.photo.satellite) { break; }
+        if (satellite != this.photo.satellite) { continue; }
+        if (!colour) { break; }
+        if (colour == this.photo.colour) { break; }
       }
     };
 
     this.setYear = function(year) {
-      this.loadCache(this.state, year).then(function() {
-        self.updateStateAndYear(self.state, year);
+      this.loadCache(this.state, year, this.colour).then(function() {
+        self.updateSet(self.state, year, self.colour);
       });
     };
     this.setState = function(state) {
-      this.loadCache(state, this.year).then(function() {
-        self.updateStateAndYear(state, self.year);
+      this.loadCache(state, this.year, this.colour).then(function() {
+        self.updateSet(state, self.year, self.colour);
+      });
+    };
+    this.setColour = function(colour) {
+      this.loadCache(this.state, this.year, colour).then(function() {
+        self.updateSet(self.state, self.year, colour);
       });
     };
 
@@ -193,9 +205,9 @@
 
     this.goTo = function(params) {
       var year = params.date.getFullYear();
-      return this.loadCache(params.state, year).then(function() {
-        self.updateStateAndYear(params.state, year);
-        self.updatePhoto(params.date, params.satellite);
+      return this.loadCache(params.state, year, params.colour).then(function() {
+        self.updateSet(params.state, year, params.colour);
+        self.updatePhoto(params.date, params.satellite, params.colour);
       });
     };
 
@@ -207,6 +219,7 @@
       return self.goTo({
         state: self.states.indexOf($location.search().state) < 0 ? self.states[0] : $location.search().state,
         satellite: $location.search().satellite,
+        colour: self.colours.indexOf($location.search().colour) < 0 ? self.colours[0] : $location.search().colours,
         date: new Date(
           self.years.indexOf($location.search().year) < 0 ? self.years[self.years.length - 1] : $location.search().year,
           ($location.search().month || 12) - 1,
