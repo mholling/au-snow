@@ -119,7 +119,7 @@ def get(date, satellite, colour, quality, photosets)
       raise UnavailableError.new("data not available") unless $?.success?
       raise UnavailableError.new("data not available") if %x[convert "#{tif}" -quiet -format "%[mean]" info:] == ?0
       %x[convert -quiet "#{tif}" -quality #{quality}% "#{jpg}"]
-      tags = %w[ausnow:year=#{date.year} ausnow:state=#{state} ausnow:satellite=#{satellite}]
+      tags = %W[ausnow:year=#{date.year} ausnow:state=#{state} ausnow:satellite=#{satellite}]
       tags << "ausnow:type=falsecolour" unless colour
       flickr.upload_photo(jpg, :title => title, :tags => tags.join(?\s)).tap do |id|
         flickr.photos.setDates(:photo_id => id, :date_taken => time.strftime("%F %T"))
