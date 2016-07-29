@@ -4,6 +4,7 @@
 
 date = Date.today
 satellite = "terra"
+colour = true
 FlickRaw.api_key = "cef9b7cd3df5f75351acd80f60ff5b47"
 days = nil
 quality = 60
@@ -19,6 +20,9 @@ OptionParser.new("usage: au-snow.rb [options]") do |options|
   end
   options.on "--satellite [terra|suomi|aqua]", "satellite", %w[terra suomi aqua] do |value|
     satellite = value
+  end
+  options.on "--colour [true|false]", "colour", %w[true false] do |value|
+    colour = value == "true"
   end
   options.on "--api-key KEY", "flickr API key" do |value|
     FlickRaw.api_key = value
@@ -50,15 +54,21 @@ OptionParser.new("usage: au-snow.rb [options]") do |options|
   end
 end.parse!
 
+abort "false colour not available for MODIS Aqua" if satellite == "aqua" && !colour
+
 UnavailableError = Class.new(StandardError);
 
-def get(date, satellite, quality, photosets)
+def get(date, satellite, colour, quality, photosets)
   Dir.mktmpdir do |dir|
     outstanding = [
       [ "nsw", "147.768908 -36.929548 149.112564 -35.414950" ],
       [ "vic", "146.141080 -37.918267 147.541791 -36.632428" ],
     ].map do |state, window|
-      [ state, "#{state}-#{date}-#{satellite}", "au-snow-#{state}", window ]
+      title_parts = [ state, date, satellite ]
+      title_parts << 'falsecolour' unless colour
+      set_parts = [ 'au-snow', state ]
+      set_parts << 'falsecolour' unless colour
+      [ state, title_parts.join(?-), set_parts.join(?-), window ]
     end.reject do |state, title, set_title, window|
       flickr.photos.search(:user_id => "me", :text => title).any?
     end
@@ -67,10 +77,16 @@ def get(date, satellite, quality, photosets)
     dir = Pathname.new(dir)
     wms = dir + 'wms.xml'
     
-    layer, seconds = case satellite
-    when "terra" then [ "MODIS_Terra_CorrectedReflectance_TrueColor", 37800 ] # 10:30
-    when "suomi" then [  "VIIRS_SNPP_CorrectedReflectance_TrueColor", 48600 ] # 13:30
-    when "aqua"  then [  "MODIS_Aqua_CorrectedReflectance_TrueColor", 48600 ] # 13:30
+    layer = case satellite
+    when "terra" then colour ? "MODIS_Terra_CorrectedReflectance_TrueColor" : "MODIS_Terra_CorrectedReflectance_Bands367"
+    when "suomi" then colour ?  "VIIRS_SNPP_CorrectedReflectance_TrueColor" :  "VIIRS_SNPP_CorrectedReflectance_BandsM3-I3-M11"
+    when "aqua"  then           "MODIS_Aqua_CorrectedReflectance_TrueColor"
+    end
+    
+    seconds = case satellite
+    when "terra" then 37800 # 10:30
+    when "suomi" then 48600 # 13:30
+    when "aqua"  then 48600 # 13:30
     end
     
     wms.write <<-EOF
@@ -103,7 +119,9 @@ def get(date, satellite, quality, photosets)
       raise UnavailableError.new("data not available") unless $?.success?
       raise UnavailableError.new("data not available") if %x[convert "#{tif}" -quiet -format "%[mean]" info:] == ?0
       %x[convert -quiet "#{tif}" -quality #{quality}% "#{jpg}"]
-      flickr.upload_photo(jpg, :title => title, :tags => "ausnow:year=#{date.year} ausnow:state=#{state} ausnow:satellite=#{satellite}").tap do |id|
+      tags = %w[ausnow:year=#{date.year} ausnow:state=#{state} ausnow:satellite=#{satellite}]
+      tags << "ausnow:type=falsecolour" unless colour
+      flickr.upload_photo(jpg, :title => title, :tags => tags.join(?\s)).tap do |id|
         flickr.photos.setDates(:photo_id => id, :date_taken => time.strftime("%F %T"))
         flickr.photos.setPerms(:photo_id => id, :is_public => 1, :is_friend => 0, :is_family => 1, :perm_comment => 0, :perm_addmeta => 0)
         photosets.find do |set|
@@ -122,12 +140,12 @@ if Hash === date
   Range.new(date["start"], date["stop"]).each do |date|
     %w[terra suomi aqua].each do |satellite|
       begin
-        message = get(date, satellite, quality, photosets) ? "downloaded" : "images already exist"
-        STDOUT.puts "#{date} %5s: #{message}" % satellite
+        message = get(date, satellite, colour, quality, photosets) ? "downloaded" : "images already exist"
+        STDOUT.puts "#{date} %5s %5s colour: #{message}" % [ satellite, colour ]
       rescue UnavailableError => e
-        STDERR.puts "#{date} %5s: #{e.message}" % satellite
+        STDERR.puts "#{date} %5s %5s colour: #{e.message}" % [ satellite, colour ]
       rescue StandardError => e
-        STDERR.puts "#{date} %5s: #{e.message}" % satellite
+        STDERR.puts "#{date} %5s %5s colour: #{e.message}" % [ satellite, colour ]
         STDERR.puts "retrying..."
         retry
       end
@@ -136,12 +154,12 @@ if Hash === date
 end
 
 begin
-  message = get(date, satellite, quality, flickr.photosets.getList) ? "downloaded" : "images already exist"
-  STDOUT.puts "#{date} %5s: #{message}" % satellite
+  message = get(date, satellite, colour, quality, flickr.photosets.getList) ? "downloaded" : "images already exist"
+  STDOUT.puts "#{date} #{satellite} #{colour}-colour: #{message}"
 rescue UnavailableError => e
-  abort "#{date} %5s: #{e.message}" % satellite
+  abort       "#{date} #{satellite} #{colour}-colour: #{e.message}"
 rescue StandardError => e
-  STDERR.puts "#{date} %5s: #{e.message}" % satellite
+  STDERR.puts "#{date} #{satellite} #{colour}-colour: #{e.message}"
   abort unless (tries -= 1) > 0
   STDERR.puts "retrying..."
   retry
