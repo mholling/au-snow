@@ -63,14 +63,17 @@ def get(date, satellite, colour, quality, photosets)
     outstanding = [
       [ "nsw", "147.768908 -36.929548 149.112564 -35.414950" ],
       [ "vic", "146.141080 -37.918267 147.541791 -36.632428" ],
-    ].map do |state, window|
+    ].reject do |state, window|
+      machine_tags = "ausnow:state=#{state},ausnow:satellite=#{satellite},ausnow:colour=#{colour}colour"
+      puts machine_tags
+      p flickr.photos.search(:user_id => "me", :machine_tags => machine_tags, :machine_tag_mode => "all", :min_taken_date => date.to_time.to_i, :max_taken_date => (date + 1).to_time.to_i - 1).any?
+      abort
+    end.map do |state, window|
       title_parts = [ state, date, satellite ]
       title_parts << 'falsecolour' unless colour
       set_parts = [ 'au-snow', state ]
       set_parts << 'falsecolour' unless colour
       [ state, title_parts.join(?-), set_parts.join(?-), window ]
-    end.reject do |state, title, set_title, window|
-      flickr.photos.search(:user_id => "me", :text => title).any?
     end
     return false unless outstanding.any?
     
