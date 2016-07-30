@@ -164,8 +164,10 @@
         if (this.photo.date < date) { continue; }
         if (this.photo.date > date) { break; }
         if (!satellite) { break; }
-        if (satellite != this.photo.satellite) { break; }
-      }
+        if (satellite == this.photo.satellite) { break; }
+        if (satellite == "aqua" && this.photo.satellite == "suomi") { break; }
+        if (satellite == "suomi" && this.photo.satellite == "aqua") { break; }
+     }
     };
 
     this.setYear = function(year) {
@@ -178,13 +180,13 @@
     this.setState = function(state) {
       this.loadCache(state, this.year, this.colour).then(function() {
         self.updateSet(state, self.year, self.colour);
-        self.updatePhoto(self.photo.date, self.satellite, self.colour);
+        self.updatePhoto(self.photo.date, self.photo.satellite, self.colour);
       });
     };
     this.setColour = function(colour) {
       this.loadCache(this.state, this.year, colour).then(function() {
         self.updateSet(self.state, self.year, colour);
-        self.updatePhoto(self.photo.date, self.satellite, self.colour);
+        self.updatePhoto(self.photo.date, self.photo.satellite, self.colour);
       });
     };
 
