@@ -96,12 +96,15 @@
             return photo1.datetaken < photo2.datetaken ? -1 : photo1.datetaken > photo2.datetaken ? 1 : 0;
           }).map(function(photo) {
             var parts = photo.datetaken.split(/[- :]/);
-            var match = photo.machine_tags.match(/ausnow:satellite=(terra|suomi|aqua)/);
-            var satellite = match && match[1];
+            var satellite_match = photo.machine_tags.match(/ausnow:satellite=(terra|suomi|aqua)/);
+            var colour_match = photo.machine_tags.match(/ausnow:colour=(truecolour|falsecolour)/);
+            var satellite = satellite_match && satellite_match[1];
+            var colour = colour_match && colour_match[1];
             return {
               url: photo.url_o,
               date: new Date(parts[0], parts[1]-1, parts[2]),
               satellite: satellite,
+              colour: colour,
               permalink: '?state=' + state + '&year=' + parts[0] + '&month=' + parts[1] + '&day=' + parts[2] + '&satellite=' + satellite + '&colour=' + colour,
               width: photo.width_o,
               height: photo.height_o,
@@ -121,7 +124,6 @@
               result.push(null);
             return result;
           }, [ ]);
-          self.cache[state][year][colour].photo = self.cache[state][year][colour].photos[0];
           self.loading = false;
         }).error(function() {
           self.loading = false;
@@ -147,13 +149,10 @@
     };
 
     this.updateSet = function(state, year, colour) {
-      if (this.state && this.year && this.colour)
-        this.cache[this.state][this.year][this.colour].photo = this.photo;
       this.state = state;
       this.year = year;
       this.colour = colour;
       this.photos = this.cache[state][year][colour].photos;
-      this.photo = this.cache[state][year][colour].photo;
       this.overlays = this.cache[state].overlays;
     };
     this.updatePhoto = function(date, satellite, colour) {
@@ -163,25 +162,27 @@
         if (this.photo.date < date) { continue; }
         if (this.photo.date > date) { break; }
         if (!satellite) { break; }
-        if (satellite != this.photo.satellite) { continue; }
-        if (!colour) { break; }
-        if (colour == this.photo.colour) { break; }
+        if (satellite != this.photo.satellite) { break; }
       }
     };
 
     this.setYear = function(year) {
       this.loadCache(this.state, year, this.colour).then(function() {
         self.updateSet(self.state, year, self.colour);
+        var date = new Date(year, self.photo.date.getMonth(), self.photo.date.getDate());
+        self.updatePhoto(date, self.satellite, self.colour);
       });
     };
     this.setState = function(state) {
       this.loadCache(state, this.year, this.colour).then(function() {
         self.updateSet(state, self.year, self.colour);
+        self.updatePhoto(self.photo.date, self.satellite, self.colour);
       });
     };
     this.setColour = function(colour) {
       this.loadCache(this.state, this.year, colour).then(function() {
         self.updateSet(self.state, self.year, colour);
+        self.updatePhoto(self.photo.date, self.satellite, self.colour);
       });
     };
 
