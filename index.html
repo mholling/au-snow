@@ -75,7 +75,7 @@
           </button>
           <ul class="dropdown-menu">
             <li ng-repeat="hit in snow.greatestHits">
-              <a tabindex="-1" href dropdown-toggle ng-click="snow.goTo(hit)">
+              <a tabindex="-1" ng-href="{{ hit.permalink }}" dropdown-toggle ng-click="snow.goTo(hit)">
                 {{ hit.date.getFullYear() }}: {{ hit.description }}
               </a>
             </li>
