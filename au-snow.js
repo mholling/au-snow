@@ -50,6 +50,27 @@
     this.states = [ 'nsw', 'vic' ]; // TODO: add Tasmania!
     this.colours = [ 'truecolour', 'falsecolour' ];
 
+    this.processPhoto = function(photo) {
+      var state_match = photo.machine_tags.match(/ausnow:state=(nsw|vic)/);
+      var satellite_match = photo.machine_tags.match(/ausnow:satellite=(terra|suomi|aqua)/);
+      var colour_match = photo.machine_tags.match(/ausnow:colour=(truecolour|falsecolour)/);
+      var state = state_match && state_match[1];
+      var satellite = satellite_match && satellite_match[1];
+      var colour = colour_match && colour_match[1];
+      var parts = photo.datetaken.split(/[- :]/);
+      return {
+        url: photo.url_o,
+        date: new Date(parts[0], parts[1]-1, parts[2]),
+        state: state_match && state_match[1],
+        satellite: satellite_match && satellite_match[1],
+        colour: colour_match && colour_match[1],
+        description: photo.description._content,
+        permalink: '?state=' + state + '&year=' + parts[0] + '&month=' + parts[1] + '&day=' + parts[2] + '&satellite=' + satellite + '&colour=' + colour,
+        width: photo.width_o,
+        height: photo.height_o,
+      };
+    }
+
     this.loadYears = function() {
       return flickrTagValues('year').success(function(data) {
         self.years = data.values.value.map(function(value) {
@@ -72,19 +93,7 @@
 
     this.loadGreatestHits = function() {
       return flickrSearch({ hit: null, state: null }).success(function(data) {
-        self.greatestHits = data.photos.photo.map(function(photo) {
-          var parts = photo.datetaken.split(/[- :]/);
-          var satellite_match = photo.machine_tags.match(/ausnow:satellite=(terra|suomi|aqua)/);
-          var colour_match = photo.machine_tags.match(/ausnow:colour=(truecolour|falsecolour)/);
-          var state_match = photo.machine_tags.match(/ausnow:state=(nsw|vic)/);
-          return {
-            date: new Date(parts[0], parts[1]-1, parts[2]),
-            state: state_match && state_match[1],
-            satellite: satellite_match && satellite_match[1],
-            colour: colour_match && colour_match[1],
-            description: photo.description._content,
-          };
-        });
+        self.greatestHits = data.photos.photo.map(self.processPhoto);
       });
     };
 
@@ -96,22 +105,7 @@
         return flickrSearch({ state: state, year: year, colour: colour}).success(function(data) {
           self.cache[state][year][colour].photos = data.photos.photo.sort(function(photo1, photo2) {
             return photo1.datetaken < photo2.datetaken ? -1 : photo1.datetaken > photo2.datetaken ? 1 : 0;
-          }).map(function(photo) {
-            var parts = photo.datetaken.split(/[- :]/);
-            var satellite_match = photo.machine_tags.match(/ausnow:satellite=(terra|suomi|aqua)/);
-            var colour_match = photo.machine_tags.match(/ausnow:colour=(truecolour|falsecolour)/);
-            var satellite = satellite_match && satellite_match[1];
-            var colour = colour_match && colour_match[1];
-            return {
-              url: photo.url_o,
-              date: new Date(parts[0], parts[1]-1, parts[2]),
-              satellite: satellite,
-              colour: colour,
-              permalink: '?state=' + state + '&year=' + parts[0] + '&month=' + parts[1] + '&day=' + parts[2] + '&satellite=' + satellite + '&colour=' + colour,
-              width: photo.width_o,
-              height: photo.height_o,
-            };
-          }).reduce(function(result, photo, index, photos) {
+          }).map(self.processPhoto).reduce(function(result, photo, index, photos) {
             result.push(photo);
             if (index + 1 >= photos.length)
               return result;
