@@ -75,11 +75,13 @@
         self.greatestHits = data.photos.photo.map(function(photo) {
           var parts = photo.datetaken.split(/[- :]/);
           var satellite_match = photo.machine_tags.match(/ausnow:satellite=(terra|suomi|aqua)/);
+          var colour_match = photo.machine_tags.match(/ausnow:colour=(truecolour|falsecolour)/);
           var state_match = photo.machine_tags.match(/ausnow:state=(nsw|vic)/);
           return {
             date: new Date(parts[0], parts[1]-1, parts[2]),
             state: state_match && state_match[1],
             satellite: satellite_match && satellite_match[1],
+            colour: colour_match && colour_match[1],
             description: photo.description._content,
           };
         });
