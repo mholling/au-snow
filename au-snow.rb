@@ -65,9 +65,7 @@ def get(date, satellite, colour, quality, photosets)
       [ "vic", "146.141080 -37.918267 147.541791 -36.632428" ],
     ].reject do |state, window|
       machine_tags = "ausnow:state=#{state},ausnow:satellite=#{satellite},ausnow:colour=#{colour}colour"
-      puts machine_tags
-      p flickr.photos.search(:user_id => "me", :machine_tags => machine_tags, :machine_tag_mode => "all", :min_taken_date => date.to_time.to_i, :max_taken_date => (date + 1).to_time.to_i - 1).any?
-      abort
+      flickr.photos.search(:user_id => "me", :machine_tags => machine_tags, :machine_tag_mode => "all", :min_taken_date => date.to_time.to_i, :max_taken_date => (date + 1).to_time.to_i - 1).any?
     end.map do |state, window|
       title_parts = [ state, date, satellite ]
       title_parts << 'falsecolour' unless colour
