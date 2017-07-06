@@ -20,7 +20,7 @@
       ga('send', 'pageview');
     </script>
   </head>
-  <body ng-controller="SnowController as snow">
+  <body ng-controller="SnowController as snow" ng-keydown="snow.key($event)">
     <section stop-screen-move>
       <div class="btn-toolbar" ng-show="snow.year">
         <ul id="states" class="btn-group btn-group-sm">

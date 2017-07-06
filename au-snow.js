@@ -195,6 +195,18 @@
         this.photo = this.photos[index];
     };
 
+    this.key = function(event) {
+      switch (event.keyCode) {
+        case 37:
+        case 38:
+          this.prev();
+          break;
+        case 39:
+        case 40:
+          this.next();
+      }
+    };
+
     this.isFirst = function() {
       return this.photos.indexOf(this.photo) == 0;
     };
